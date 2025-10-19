@@ -13,7 +13,7 @@ const FloatingActionButton: React.FC = () => {
     {
       icon: SearchIcon,
       label: 'Search',
-      color: 'bg-primary-500 hover:bg-primary-600',
+      color: 'bg-terracotta-500 hover:bg-terracotta-600',
       action: () => {
         // Focus search input or open search modal
         const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
@@ -25,7 +25,7 @@ const FloatingActionButton: React.FC = () => {
     {
       icon: HeartIcon,
       label: 'Wishlist',
-      color: 'bg-accent-500 hover:bg-accent-600',
+      color: 'bg-sand-500 hover:bg-sand-600',
       action: () => {
         // Navigate to wishlist or show wishlist modal
         console.log('Wishlist clicked');
@@ -34,7 +34,7 @@ const FloatingActionButton: React.FC = () => {
     {
       icon: ShoppingCartIcon,
       label: 'Cart',
-      color: 'bg-secondary-500 hover:bg-secondary-600',
+      color: 'bg-clay-500 hover:bg-clay-600',
       action: () => {
         // Navigate to cart
         window.location.href = '/cart';
@@ -62,7 +62,7 @@ const FloatingActionButton: React.FC = () => {
                 className="flex items-center gap-3"
               >
                 <motion.span
-                  className="px-3 py-2 glass rounded-2xl text-white text-sm font-medium whitespace-nowrap"
+                  className="px-3 py-2 glass rounded-2xl text-clay-800 dark:text-cream-200 text-sm font-medium whitespace-nowrap border border-terracotta-200/30"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 + 0.2 }}
@@ -71,7 +71,7 @@ const FloatingActionButton: React.FC = () => {
                 </motion.span>
                 <motion.button
                   onClick={item.action}
-                  className={`p-4 rounded-2xl ${item.color} text-white shadow-lg transition-all duration-300`}
+                  className={`p-4 rounded-2xl ${item.color} text-cream-50 shadow-warm transition-all duration-300`}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -86,8 +86,8 @@ const FloatingActionButton: React.FC = () => {
       {/* Main FAB */}
       <motion.button
         onClick={toggleMenu}
-        className={`p-5 rounded-2xl glass border border-white/20 text-white shadow-glass transition-all duration-300 ${
-          isOpen ? 'bg-accent-500/80' : 'bg-primary-500/80'
+        className={`p-5 rounded-2xl glass border border-terracotta-200/30 text-cream-50 shadow-warm transition-all duration-300 ${
+          isOpen ? 'bg-sand-500/80' : 'bg-terracotta-500/80'
         }`}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
@@ -123,7 +123,7 @@ const FloatingActionButton: React.FC = () => {
 
       {/* Ripple Effect */}
       <motion.div
-        className="absolute inset-0 rounded-2xl bg-white/20"
+        className="absolute inset-0 rounded-2xl bg-terracotta-300/20"
         animate={{
           scale: isOpen ? [1, 1.5, 1] : 1,
           opacity: isOpen ? [0.5, 0, 0.5] : 0,

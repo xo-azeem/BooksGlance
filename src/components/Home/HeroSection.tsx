@@ -1,242 +1,194 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useTheme } from '../../contexts/ThemeContext';
-import { ArrowRightIcon, SparklesIcon, BookOpenIcon, StarIcon } from 'lucide-react';
+import { animationVariants } from '../../utils/animations';
+import OriginalBook from './OriginalBook';
 
-const HeroSection: React.FC = () => {
-  const { theme } = useTheme();
+// TypewriterText Component
+interface TypewriterTextProps {
+  text: string;
+  className?: string;
+  delay?: number;
+  speed?: number;
+}
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.1
+const TypewriterText: React.FC<TypewriterTextProps> = ({ 
+  text, 
+  className = '', 
+  delay = 0, 
+  speed = 100 
+}) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (currentIndex < text.length) {
+        setDisplayedText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
       }
-    }
-  };
+    }, currentIndex === 0 ? delay : speed);
 
-  const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        ease: [0.4, 0, 0.2, 1]
-      }
-    }
-  };
-
-  const floatingVariants = {
-    float: {
-      y: [-10, 10, -10],
-      transition: {
-        duration: 6,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  };
+    return () => clearTimeout(timer);
+  }, [currentIndex, text, delay, speed]);
 
   return (
-    <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          className="absolute top-20 left-10 w-72 h-72 bg-primary-400/20 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <motion.div
-          className="absolute bottom-20 right-10 w-96 h-96 bg-secondary-400/20 rounded-full blur-3xl"
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.4, 0.7, 0.4],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent-400/15 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.2, 0.5, 0.2],
-          }}
-          transition={{
-            duration: 12,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
+    <span className={className}>
+      {displayedText}
+      <motion.span
+        animate={{ opacity: [0, 1, 0] }}
+        transition={{ duration: 0.8, repeat: Infinity }}
+        className="ml-1"
+      >
+        |
+      </motion.span>
+    </span>
+  );
+};
+
+const HeroSection: React.FC = () => {
+
+  return (
+    <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden">
+      {/* Background Website Name */}
+      <div className="absolute top-0 left-0 right-0 flex items-start justify-center -z-20 pt-8 pb-48 min-h-[80vh]">
+        <h1 className="text-[6rem] sm:text-[8rem] md:text-[10rem] lg:text-[12rem] xl:text-[14rem] font-black bg-gradient-to-r from-clay-300/15 via-terracotta-300/20 to-sand-300/15 dark:from-clay-600/25 dark:via-terracotta-600/30 dark:to-sand-600/25 bg-clip-text text-transparent font-very-tall tracking-[0.1em] leading-[0.3] select-none pointer-events-none whitespace-nowrap uppercase transform scale-y-[1.4]">
+          BooksGlance
+        </h1>
       </div>
 
-      <div className="relative z-10 container mx-auto px-6 py-20">
+      {/* Original 3D Book Background */}
+      <OriginalBook />
+
+      {/* Website Name at Top */}
+      <motion.div
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="absolute top-12 transform -translate-x-1/2 z-30 pointer-events-auto text-center"
+      >
+        <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold bg-gradient-to-r from-clay-700 via-terracotta-700 to-clay-500 dark:from-cream-400 dark:via-cream-100 dark:to-sand-200 bg-clip-text text-transparent font-semibold tracking-wide leading-tight">
+          BooksGlance
+        </h1>
+      </motion.div>
+
+      <div className="relative z-20 container mx-auto px-6 py-20 pointer-events-none flex flex-col items-center justify-center min-h-screen">
         <motion.div
-          variants={containerVariants}
+          variants={animationVariants.heroContainer}
           initial="hidden"
           animate="visible"
-          className="flex flex-col lg:flex-row items-center gap-16"
+          className="text-center max-w-4xl mx-auto pointer-events-auto"
         >
-          {/* Left Content */}
-          <div className="lg:w-1/2 text-center lg:text-left">
+
+          {/* Main Heading with Typewriter Effect */}
+          <motion.h2
+            variants={animationVariants.heroText}
+            className="text-4xl md:text-5xl lg:text-6xl font-light mb-8 leading-[0.9] tracking-wide"
+          >
+            <TypewriterText 
+              text="Your Gateway to Stories"
+              className="bg-gradient-to-r font-semibold from-terracotta-500 via-terracotta-600 to-sand-700 dark:from-terracotta-700 dark:via-sand-400 dark:to-clay-400 bg-clip-text text-transparent"
+            />
+          </motion.h2>
+
+          {/* Subtitle with Typewriter Effect */}
+          <motion.div
+            variants={animationVariants.heroText}
+            className="mb-12 relative"
+          >
+            <TypewriterText 
+              text="Discover extraordinary books that inspire, educate, and transform your reading journey."
+              className="text-xl md:text-2xl text-clay-600 dark:text-cream-400 leading-relaxed max-w-3xl mx-auto font-light font-display tracking-wide italic"
+              delay={2000}
+            />
+            
+            {/* Elegant decorative elements */}
             <motion.div
-              variants={itemVariants}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-white/20 mb-6"
-            >
-              <SparklesIcon className="w-4 h-4 text-primary-400" />
-              <span className="text-sm font-medium text-white/90">New Collection Available</span>
-            </motion.div>
-
-            <motion.h1
-              variants={itemVariants}
-              className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight"
-            >
-              <span className="bg-gradient-to-r from-white via-white to-white/80 bg-clip-text text-transparent">
-                Discover Your
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-primary-300 via-secondary-300 to-accent-300 bg-clip-text text-transparent">
-                Next Adventure
-              </span>
-            </motion.h1>
-
-            <motion.p
-              variants={itemVariants}
-              className="text-xl text-white/80 mb-12 leading-relaxed max-w-2xl"
-            >
-              Immerse yourself in our curated collection of books that transport you to new worlds, 
-              expand your mind, and ignite your imagination.
-            </motion.p>
-
+              className="absolute -left-8 top-1/2 transform -translate-y-1/2 w-16 h-0.5 bg-gradient-to-r from-transparent via-terracotta-400/60 to-transparent"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 3, duration: 1.5, ease: "easeOut" }}
+            />
             <motion.div
-              variants={itemVariants}
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+              className="absolute -right-8 top-1/2 transform -translate-y-1/2 w-16 h-0.5 bg-gradient-to-l from-transparent via-sand-400/60 to-transparent"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 3.5, duration: 1.5, ease: "easeOut" }}
+            />
+            
+            {/* Floating particles around text */}
+            <motion.div
+              className="absolute -top-4 left-1/4 w-2 h-2 bg-terracotta-400/40 rounded-full"
+              animate={{
+                y: [0, -10, 0],
+                opacity: [0.4, 0.8, 0.4],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 4
+              }}
+            />
+            <motion.div
+              className="absolute -bottom-2 right-1/3 w-1.5 h-1.5 bg-sand-400/50 rounded-full"
+              animate={{
+                y: [0, -8, 0],
+                opacity: [0.5, 0.9, 0.5],
+              }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 4.5
+              }}
+            />
+          </motion.div>
+
+          {/* Action Button */}
+          <motion.div
+            variants={animationVariants.staggerContainer}
+            className="flex justify-center pointer-events-auto"
+          >
+            <motion.div
+              variants={animationVariants.buttonPrimary}
+              whileHover={{ 
+                scale: 1.05,
+                y: -3,
+                transition: { duration: 0.3, ease: "easeOut" }
+              }}
+              whileTap={{ 
+                scale: 0.98,
+                transition: { duration: 0.1 }
+              }}
             >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Link
+                to="/categories"
+                className="group relative inline-flex items-center px-16 py-6 rounded-2xl font-light text-xl text-clay-800 dark:text-cream-200 glass border-2 border-terracotta-300/40 hover:border-terracotta-400/60 transition-all duration-500 shadow-warm hover:shadow-glow-lg backdrop-blur-xl pointer-events-auto overflow-hidden font-display tracking-wide"
               >
-                <Link
-                  to="/categories"
-                  className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 transition-all duration-300 shadow-glow"
-                >
-                  <BookOpenIcon className="w-5 h-5" />
-                  Explore Collection
-                  <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link
-                  to="/best-sellers"
-                  className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold text-white glass border border-white/20 hover:border-white/40 transition-all duration-300"
-                >
-                  <StarIcon className="w-5 h-5" />
-                  Best Sellers
-                </Link>
-              </motion.div>
-            </motion.div>
-
-            {/* Stats */}
-            <motion.div
-              variants={itemVariants}
-              className="flex flex-wrap gap-8 mt-16 justify-center lg:justify-start"
-            >
-              {[
-                { number: "10K+", label: "Books Available" },
-                { number: "50+", label: "Categories" },
-                { number: "99%", label: "Happy Readers" }
-              ].map((stat, index) => (
+                {/* Glassmorphic Background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-cream-100/30 via-sand-100/30 to-clay-100/30 dark:from-clay-800/30 dark:via-terracotta-800/30 dark:to-sand-800/30 rounded-2xl" />
+                
+                {/* Shimmer Effect */}
                 <motion.div
-                  key={index}
-                  className="text-center"
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <div className="text-3xl font-bold text-white mb-1">{stat.number}</div>
-                  <div className="text-sm text-white/60">{stat.label}</div>
-                </motion.div>
-              ))}
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100"
+                  animate={{
+                    x: ['-100%', '100%'],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    repeatDelay: 2,
+                    ease: "easeInOut"
+                  }}
+                />
+                
+                {/* Content */}
+                <span className="relative z-10 font-medium">Explore Collection</span>
+              </Link>
             </motion.div>
-          </div>
+          </motion.div>
 
-          {/* Right Content - Floating Book Cards */}
-          <div className="lg:w-1/2 relative">
-            <motion.div
-              variants={floatingVariants}
-              animate="float"
-              className="relative"
-            >
-              {/* Main Book Stack */}
-              <motion.div
-                className="relative z-10"
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="glass rounded-3xl p-6 border border-white/20 shadow-glass">
-                  <img
-                    src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80"
-                    alt="Book Collection"
-                    className="w-full h-80 object-cover rounded-2xl"
-                  />
-                  <div className="mt-4">
-                    <h3 className="text-xl font-semibold text-white mb-2">Featured Collection</h3>
-                    <p className="text-white/70">Discover our handpicked selection of must-read books</p>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Floating Cards */}
-              <motion.div
-                className="absolute -top-4 -right-4 glass rounded-2xl p-4 border border-white/20 shadow-glass"
-                animate={{
-                  y: [-5, 5, -5],
-                  rotate: [0, 2, 0],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                <div className="w-16 h-20 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-lg flex items-center justify-center">
-                  <BookOpenIcon className="w-8 h-8 text-white" />
-                </div>
-              </motion.div>
-
-              <motion.div
-                className="absolute -bottom-4 -left-4 glass rounded-2xl p-4 border border-white/20 shadow-glass"
-                animate={{
-                  y: [5, -5, 5],
-                  rotate: [0, -2, 0],
-                }}
-                transition={{
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                <div className="w-16 h-20 bg-gradient-to-br from-accent-400 to-primary-400 rounded-lg flex items-center justify-center">
-                  <StarIcon className="w-8 h-8 text-white" />
-                </div>
-              </motion.div>
-            </motion.div>
-          </div>
         </motion.div>
       </div>
     </section>

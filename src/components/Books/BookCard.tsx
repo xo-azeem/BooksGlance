@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Book } from '../../data/books';
 import { useTheme } from '../../contexts/ThemeContext';
 import { ShoppingCartIcon, HeartIcon, StarIcon, EyeIcon, BookOpenIcon } from 'lucide-react';
+import { animationVariants, getCardAnimation, springConfigs } from '../../utils/animations';
 
 interface BookCardProps {
   book: Book;
@@ -15,31 +16,9 @@ const BookCard: React.FC<BookCardProps> = ({ book, index = 0 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
 
-  const cardVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: 30,
-      scale: 0.9
-    },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        delay: index * 0.1,
-        ease: [0.4, 0, 0.2, 1]
-      }
-    },
-    hover: {
-      y: -8,
-      scale: 1.02,
-      transition: {
-        duration: 0.3,
-        ease: [0.4, 0, 0.2, 1]
-      }
-    }
-  };
+  // Get unique animation based on index
+  const cardAnimationType = getCardAnimation(index);
+  const cardVariants = animationVariants[cardAnimationType as keyof typeof animationVariants];
 
   const overlayVariants = {
     hidden: { opacity: 0 },
@@ -66,12 +45,18 @@ const BookCard: React.FC<BookCardProps> = ({ book, index = 0 }) => {
       variants={cardVariants}
       initial="hidden"
       animate="visible"
-      whileHover="hover"
+      whileHover={{ 
+        y: -12, 
+        scale: 1.03,
+        rotateY: 2,
+        transition: springConfigs.gentle
+      }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       className="group relative"
+      transition={{ delay: index * 0.15 }}
     >
-      <div className="relative glass rounded-3xl overflow-hidden border border-white/20 shadow-glass hover:shadow-glow transition-all duration-300">
+      <div className="relative glass rounded-3xl overflow-hidden border border-terracotta-200/30 shadow-warm hover:shadow-glow transition-all duration-300">
         {/* Book Cover */}
         <Link to={`/book/${book.id}`} className="block relative h-80 overflow-hidden">
           <motion.img 
@@ -83,7 +68,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, index = 0 }) => {
           />
           
           {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-clay-900/60 via-transparent to-transparent" />
           
           {/* Quick Action Buttons */}
           <AnimatePresence>
@@ -93,7 +78,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, index = 0 }) => {
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center gap-4"
+                className="absolute inset-0 bg-clay-800/40 backdrop-blur-sm flex items-center justify-center gap-4"
               >
                 <motion.button
                   variants={buttonVariants}
@@ -101,7 +86,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, index = 0 }) => {
                   animate="visible"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                  className="p-4 rounded-2xl glass border border-white/20 text-white hover:bg-primary-500/80 transition-all duration-300"
+                  className="p-4 rounded-2xl glass border border-terracotta-200/30 text-clay-800 hover:bg-terracotta-500/80 transition-all duration-300"
                   aria-label="Add to cart"
                 >
                   <ShoppingCartIcon size={20} />
@@ -117,8 +102,8 @@ const BookCard: React.FC<BookCardProps> = ({ book, index = 0 }) => {
                     e.preventDefault();
                     setIsLiked(!isLiked);
                   }}
-                  className={`p-4 rounded-2xl glass border border-white/20 text-white transition-all duration-300 ${
-                    isLiked ? 'bg-accent-500/80' : 'hover:bg-accent-500/80'
+                  className={`p-4 rounded-2xl glass border border-terracotta-200/30 text-clay-800 transition-all duration-300 ${
+                    isLiked ? 'bg-sand-500/80' : 'hover:bg-sand-500/80'
                   }`}
                   aria-label="Add to wishlist"
                 >
@@ -131,7 +116,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, index = 0 }) => {
                   animate="visible"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.95 }}
-                  className="p-4 rounded-2xl glass border border-white/20 text-white hover:bg-secondary-500/80 transition-all duration-300"
+                  className="p-4 rounded-2xl glass border border-terracotta-200/30 text-clay-800 hover:bg-clay-500/80 transition-all duration-300"
                   aria-label="Quick view"
                 >
                   <EyeIcon size={20} />
@@ -164,35 +149,35 @@ const BookCard: React.FC<BookCardProps> = ({ book, index = 0 }) => {
             )}
           </div>
 
-          {/* Floating Book Icon */}
-          <motion.div
-            className="absolute top-4 right-4 p-2 glass rounded-xl border border-white/20"
-            animate={{
-              y: [0, -5, 0],
-              rotate: [0, 5, 0],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          >
-            <BookOpenIcon className="w-5 h-5 text-white" />
-          </motion.div>
+              {/* Floating Book Icon */}
+              <motion.div
+                className="absolute top-4 right-4 p-2 glass rounded-xl border border-terracotta-200/30"
+                animate={{
+                  y: [0, -5, 0],
+                  rotate: [0, 5, 0],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <BookOpenIcon className="w-5 h-5 text-clay-800" />
+              </motion.div>
         </Link>
 
         {/* Book Details */}
         <div className="p-6">
           <Link to={`/book/${book.id}`} className="block group">
             <motion.h3 
-              className="text-lg font-bold text-white mb-2 group-hover:text-primary-300 transition-colors duration-300 line-clamp-2"
+              className="text-lg font-bold text-clay-800 dark:text-cream-200 mb-2 group-hover:text-terracotta-600 dark:group-hover:text-terracotta-400 transition-colors duration-300 line-clamp-2"
               whileHover={{ x: 5 }}
             >
               {book.title}
             </motion.h3>
           </Link>
           
-          <p className="text-white/70 text-sm mb-3 line-clamp-1">
+          <p className="text-clay-600 dark:text-cream-300 text-sm mb-3 line-clamp-1">
             by {book.author}
           </p>
 
@@ -206,20 +191,20 @@ const BookCard: React.FC<BookCardProps> = ({ book, index = 0 }) => {
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.4 + index * 0.1 + i * 0.05 }}
                 >
-                  <StarIcon 
-                    size={16} 
-                    className={`${
-                      i < Math.floor(book.rating) 
-                        ? 'text-yellow-400 fill-yellow-400' 
-                        : 'text-white/30'
-                    }`} 
-                  />
-                </motion.div>
-              ))}
-            </div>
-            <span className="ml-2 text-xs text-white/60">
-              ({book.rating})
-            </span>
+                      <StarIcon 
+                        size={16} 
+                        className={`${
+                          i < Math.floor(book.rating) 
+                            ? 'text-sand-500 fill-sand-500' 
+                            : 'text-clay-400'
+                        }`} 
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+                <span className="ml-2 text-xs text-clay-500 dark:text-cream-400">
+                  ({book.rating})
+                </span>
           </div>
 
           {/* Price and Action */}
@@ -230,27 +215,27 @@ const BookCard: React.FC<BookCardProps> = ({ book, index = 0 }) => {
               transition={{ delay: 0.5 + index * 0.1 }}
               className="flex flex-col"
             >
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary-300 to-secondary-300 bg-clip-text text-transparent">
-                ${book.price.toFixed(2)}
-              </span>
-              {book.originalPrice && book.originalPrice > book.price && (
-                <span className="text-sm text-white/50 line-through">
-                  ${book.originalPrice.toFixed(2)}
-                </span>
-              )}
+                  <span className="text-2xl font-bold bg-gradient-to-r from-terracotta-600 to-clay-600 bg-clip-text text-transparent">
+                    ${book.price.toFixed(2)}
+                  </span>
+                  {book.originalPrice && book.originalPrice > book.price && (
+                    <span className="text-sm text-clay-400 dark:text-cream-500 line-through">
+                      ${book.originalPrice.toFixed(2)}
+                    </span>
+                  )}
             </motion.div>
 
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Link
-                to={`/book/${book.id}`}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-white bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 transition-all duration-300 shadow-lg hover:shadow-glow"
-              >
-                <BookOpenIcon size={16} />
-                View Details
-              </Link>
+                  <Link
+                    to={`/book/${book.id}`}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-cream-50 bg-gradient-to-r from-terracotta-500 to-clay-500 hover:from-terracotta-600 hover:to-clay-600 transition-all duration-300 shadow-warm hover:shadow-glow"
+                  >
+                    <BookOpenIcon size={16} />
+                    View Details
+                  </Link>
             </motion.div>
           </div>
         </div>
