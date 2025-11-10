@@ -12,12 +12,19 @@ export const uploadImageToCloudinary = async (
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-  if (!cloudName || cloudName === 'your_cloud_name_here') {
-    throw new Error('Cloudinary Cloud Name is not configured. Please check your .env file.');
+  // Debug logging
+  console.log('Cloudinary Config Check:', {
+    cloudName: cloudName || 'NOT SET',
+    uploadPreset: uploadPreset || 'NOT SET',
+    allEnvKeys: Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'))
+  });
+
+  if (!cloudName || cloudName === 'your_cloud_name_here' || cloudName.trim() === '') {
+    throw new Error('Cloudinary Cloud Name is not configured. Please check your .env file and restart your dev server.');
   }
 
-  if (!uploadPreset || uploadPreset === 'your_upload_preset_name_here') {
-    throw new Error('Cloudinary Upload Preset is not configured. Please check your .env file.');
+  if (!uploadPreset || uploadPreset === 'your_upload_preset_name_here' || uploadPreset.trim() === '') {
+    throw new Error('Cloudinary Upload Preset is not configured. Please check your .env file and restart your dev server.');
   }
 
   // Sanitize bookId for Cloudinary public_id (only alphanumeric, underscores, and hyphens)
