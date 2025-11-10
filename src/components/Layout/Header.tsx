@@ -12,7 +12,8 @@ import {
   MenuIcon, 
   XIcon,
   BookOpenIcon,
-  SparklesIcon
+  SparklesIcon,
+  ShieldCheckIcon
 } from 'lucide-react';
 
 const Header: React.FC = () => {
@@ -141,6 +142,7 @@ const Header: React.FC = () => {
                   { icon: HeartIcon, label: 'Wishlist', color: 'hover:bg-sand-500/80' },
                   { icon: ShoppingCartIcon, label: 'Cart', color: 'hover:bg-terracotta-500/80', link: '/cart' },
                   { icon: UserIcon, label: 'User Profile', color: 'hover:bg-clay-500/80' },
+                  { icon: ShieldCheckIcon, label: 'Admin Portal', color: 'hover:bg-blue-500/80', link: '/admin' },
                 ].map((item, index) => (
               <motion.div
                 key={item.label}
@@ -283,6 +285,7 @@ const Header: React.FC = () => {
                   { icon: HeartIcon, label: 'Wishlist' },
                   { icon: ShoppingCartIcon, label: 'Cart', link: '/cart' },
                   { icon: UserIcon, label: 'Profile' },
+                  { icon: ShieldCheckIcon, label: 'Admin', link: '/admin' },
                 ].map((item, index) => (
                   <motion.div
                     key={item.label}
