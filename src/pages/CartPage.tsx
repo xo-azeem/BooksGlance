@@ -18,7 +18,7 @@ const CartPage: React.FC = () => {
   const [cartItems, setCartItems] = useState(initialCartItems);
   // Calculate cart totals
   const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-  const shipping = subtotal > 35 ? 0 : 5.99;
+  const shipping = subtotal > 10000 ? 0 : 500; // Free shipping over PKR 10,000
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
   // Update quantity
@@ -81,7 +81,7 @@ const CartPage: React.FC = () => {
                           </div>
                         </td>
                         <td className={`px-6 py-4 text-right ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                          ${(item.price * item.quantity).toFixed(2)}
+                          PKR {(item.price * item.quantity).toFixed(2)}
                         </td>
                         <td className="px-6 py-4 text-right">
                           <button onClick={() => removeItem(item.id)} className={`p-1 rounded-full ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}>
@@ -111,23 +111,23 @@ const CartPage: React.FC = () => {
                 <div className={`space-y-3 mb-6 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>PKR {subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
                     <span>
-                      {shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}
+                      {shipping === 0 ? 'Free' : `PKR ${shipping.toFixed(2)}`}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Estimated Tax</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span>PKR {tax.toFixed(2)}</span>
                   </div>
                   <div className={`pt-3 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
                     <div className="flex justify-between font-semibold">
                       <span>Total</span>
                       <span className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>
-                        ${total.toFixed(2)}
+                        PKR {total.toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -151,7 +151,7 @@ const CartPage: React.FC = () => {
                 </button>
                 {/* Shipping Info */}
                 <div className={`mt-6 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                  <p className="mb-2">Free shipping on orders over $35</p>
+                  <p className="mb-2">Free shipping on orders over PKR 10,000</p>
                   <p>Estimated delivery: 3-5 business days</p>
                 </div>
               </div>

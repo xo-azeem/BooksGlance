@@ -2,6 +2,7 @@ import {
   collection, 
   addDoc, 
   getDocs, 
+  getDoc,
   doc, 
   setDoc,
   updateDoc, 
@@ -64,6 +65,25 @@ export const getAllBooks = async (): Promise<Book[]> => {
     } as Book));
   } catch (error) {
     console.error('Error getting books:', error);
+    throw error;
+  }
+};
+
+// Get a book by ID from Firestore
+export const getBookById = async (bookId: string): Promise<Book | null> => {
+  try {
+    const bookRef = doc(db, BOOKS_COLLECTION, bookId);
+    const bookSnap = await getDoc(bookRef);
+    
+    if (bookSnap.exists()) {
+      return {
+        id: bookSnap.id,
+        ...bookSnap.data()
+      } as Book;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting book:', error);
     throw error;
   }
 };

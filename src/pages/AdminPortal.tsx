@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { addBook } from '../services/booksService';
-import { uploadImageToCloudinary } from '../utils/cloudinary';
+import { uploadImageToHostinger } from '../utils/fileUpload';
 import { Book } from '../data/books';
 import { 
   Save, 
@@ -132,13 +132,13 @@ const AdminPortal: React.FC = () => {
       // Generate book ID first
       bookId = generateBookId();
 
-      // Upload image to Cloudinary if a new file is selected
+      // Upload image to Hostinger if a new file is selected
       if (imageFile) {
         try {
-          imageUrl = await uploadImageToCloudinary(imageFile, bookId);
+          imageUrl = await uploadImageToHostinger(imageFile, bookId);
           console.log('Image uploaded successfully:', imageUrl);
         } catch (uploadError) {
-          console.error('Cloudinary upload error:', uploadError);
+          console.error('Hostinger upload error:', uploadError);
           throw uploadError; // Re-throw to show error to user
         }
       }
@@ -324,7 +324,7 @@ const AdminPortal: React.FC = () => {
                   htmlFor="price" 
                   className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}
                 >
-                  Price ($) <span className="text-red-500">*</span>
+                  Price (PKR) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -340,7 +340,7 @@ const AdminPortal: React.FC = () => {
                       ? 'bg-gray-700 border-gray-600 text-white' 
                       : 'bg-white border-gray-300 text-gray-900'
                   } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  placeholder="0.00"
+                  placeholder="0.00 (in PKR)"
                 />
               </div>
 

@@ -216,11 +216,11 @@ const BookCard: React.FC<BookCardProps> = ({ book, index = 0 }) => {
               className="flex flex-col"
             >
                   <span className="text-2xl font-bold bg-gradient-to-r from-terracotta-600 to-clay-600 bg-clip-text text-transparent">
-                    ${book.price.toFixed(2)}
+                    PKR {book.price.toFixed(2)}
                   </span>
                   {book.originalPrice && book.originalPrice > book.price && (
                     <span className="text-sm text-clay-400 dark:text-cream-500 line-through">
-                      ${book.originalPrice.toFixed(2)}
+                      PKR {book.originalPrice.toFixed(2)}
                     </span>
                   )}
             </motion.div>

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import BookGrid from '../components/Books/BookGrid';
-import { Book, books, genres, getBooksByGenre, getBestSellers, getNewArrivals } from '../data/books';
+import { Book, genres } from '../data/books';
+import { getAllBooks } from '../services/booksService';
 import { FilterIcon, SearchIcon } from 'lucide-react';
 interface CatalogPageProps {
   bestSellers?: boolean;
@@ -21,23 +22,45 @@ const CatalogPage: React.FC<CatalogPageProps> = ({
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search');
   const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
+  const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeGenre, setActiveGenre] = useState<string | null>(category || null);
   const [sortOption, setSortOption] = useState('featured');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // Fetch books from Firebase
   useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        setLoading(true);
+        const books = await getAllBooks();
+        setAllBooks(books);
+      } catch (error) {
+        console.error('Error fetching books:', error);
+        setAllBooks([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBooks();
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+
     let result: Book[] = [];
     // Handle best sellers or new arrivals pages
     if (bestSellers) {
-      result = getBestSellers();
+      result = allBooks.filter(book => book.bestSeller);
     } else if (newArrivals) {
-      result = getNewArrivals();
+      result = allBooks.filter(book => book.newArrival);
     } else if (category) {
       // Filter by category if provided in URL
-      result = getBooksByGenre(category);
+      result = allBooks.filter(book => book.genre.toLowerCase() === category.toLowerCase());
       setActiveGenre(category);
     } else {
       // Default to all books
-      result = [...books];
+      result = [...allBooks];
     }
     // Apply search filter if search query exists
     if (searchQuery) {
@@ -66,15 +89,16 @@ const CatalogPage: React.FC<CatalogPageProps> = ({
         break;
     }
     setFilteredBooks(result);
-  }, [category, searchQuery, sortOption, bestSellers, newArrivals]);
+  }, [category, searchQuery, sortOption, bestSellers, newArrivals, allBooks, loading]);
+  
   // Handle genre filter click
   const handleGenreClick = (genre: string | null) => {
     setActiveGenre(genre);
     if (!genre) {
       // Show all books if no genre is selected
-      setFilteredBooks(books);
+      setFilteredBooks(allBooks);
     } else {
-      setFilteredBooks(getBooksByGenre(genre));
+      setFilteredBooks(allBooks.filter(book => book.genre.toLowerCase() === genre.toLowerCase()));
     }
   };
   // Get page title based on props and params

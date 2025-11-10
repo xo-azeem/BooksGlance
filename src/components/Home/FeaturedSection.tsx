@@ -1,38 +1,43 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BookOpenIcon, StarIcon, HeartIcon, EyeIcon, ArrowRightIcon } from 'lucide-react';
 import { animationVariants, springConfigs } from '../../utils/animations';
+import { Book } from '../../data/books';
+import { getAllBooks } from '../../services/booksService';
 
 const FeaturedSection: React.FC = () => {
-  const featuredBooks = [
-    {
-      id: 1,
-      title: "The Midnight Library",
-      author: "Matt Haig",
-      price: 24.99,
-      rating: 4.8,
-      image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-      category: "Fiction"
-    },
-    {
-      id: 2,
-      title: "Atomic Habits",
-      author: "James Clear",
-      price: 19.99,
-      rating: 4.9,
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-      category: "Self-Help"
-    },
-    {
-      id: 3,
-      title: "The Seven Husbands",
-      author: "Taylor Jenkins Reid",
-      price: 22.99,
-      rating: 4.7,
-      image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-      category: "Romance"
-    }
-  ];
+  const [featuredBooks, setFeaturedBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedBooks = async () => {
+      try {
+        const allBooks = await getAllBooks();
+        // Get featured books (limit to 3)
+        const featured = allBooks.filter(book => book.featured).slice(0, 3);
+        setFeaturedBooks(featured);
+      } catch (error) {
+        console.error('Error fetching featured books:', error);
+        setFeaturedBooks([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFeaturedBooks();
+  }, []);
+
+  if (loading) {
+    return <section className="py-24 relative">
+      <div className="container mx-auto px-6 text-center">
+        <p className="text-clay-700 dark:text-cream-300">Loading featured books...</p>
+      </div>
+    </section>;
+  }
+
+  if (featuredBooks.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-24 relative">
@@ -87,14 +92,15 @@ const FeaturedSection: React.FC = () => {
                 transition: springConfigs.gentle
               }}
             >
-              <div className="relative glass rounded-3xl overflow-hidden border border-terracotta-200/30 shadow-warm hover:shadow-glow transition-all duration-500 backdrop-blur-xl">
-                {/* Book Image */}
-                <div className="relative h-80 overflow-hidden">
-                  <motion.img 
-                    src={book.image} 
-                    alt={book.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
+              <Link to={`/book/${book.id}`} className="block">
+                <div className="relative glass rounded-3xl overflow-hidden border border-terracotta-200/30 shadow-warm hover:shadow-glow transition-all duration-500 backdrop-blur-xl">
+                  {/* Book Image */}
+                  <div className="relative h-80 overflow-hidden">
+                    <motion.img 
+                      src={book.coverImage} 
+                      alt={book.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
                   
                   {/* Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-clay-900/60 via-transparent to-transparent" />
@@ -106,7 +112,7 @@ const FeaturedSection: React.FC = () => {
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.2 + index * 0.1 }}
                   >
-                    <span className="text-xs font-semibold text-cream-200">{book.category}</span>
+                    <span className="text-xs font-semibold text-cream-200">{book.genre}</span>
                   </motion.div>
 
                   {/* Action Buttons */}
@@ -166,7 +172,7 @@ const FeaturedSection: React.FC = () => {
                   <div className="flex justify-between items-center">
                     <div className="flex flex-col">
                       <span className="text-3xl font-bold bg-gradient-to-r from-terracotta-600 to-clay-600 dark:from-terracotta-400 dark:to-clay-400 bg-clip-text text-transparent">
-                        ${book.price}
+                        PKR {book.price.toFixed(2)}
                       </span>
                     </div>
 
@@ -194,7 +200,8 @@ const FeaturedSection: React.FC = () => {
                     ease: "easeInOut"
                   }}
                 />
-              </div>
+                </div>
+              </Link>
             </motion.div>
           ))}
         </motion.div>
@@ -207,24 +214,26 @@ const FeaturedSection: React.FC = () => {
           viewport={{ once: true }}
           transition={{ delay: 0.5 }}
         >
-          <motion.button
-            className="group inline-flex items-center gap-3 px-10 py-4 rounded-3xl font-bold text-lg text-clay-800 dark:text-cream-200 glass border border-terracotta-200/30 hover:border-terracotta-300/50 transition-all duration-300 backdrop-blur-xl"
-            whileHover={{ 
-              scale: 1.05, 
-              y: -3,
-              transition: springConfigs.bouncy
-            }}
-            whileTap={{ scale: 0.95 }}
-          >
-            View All Books
+          <Link to="/categories">
+            <motion.button
+              className="group inline-flex items-center gap-3 px-10 py-4 rounded-3xl font-bold text-lg text-clay-800 dark:text-cream-200 glass border border-terracotta-200/30 hover:border-terracotta-300/50 transition-all duration-300 backdrop-blur-xl"
+              whileHover={{ 
+                scale: 1.05, 
+                y: -3,
+                transition: springConfigs.bouncy
+              }}
+              whileTap={{ scale: 0.95 }}
+            >
+              View All Books
             <motion.div
               animate={{ x: [0, 5, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             >
               <ArrowRightIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-            </motion.div>
-          </motion.button>
-        </motion.div>
+              </motion.div>
+            </motion.button>
+          </Link>
+          </motion.div>
       </div>
     </section>
   );
