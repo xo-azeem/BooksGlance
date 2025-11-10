@@ -83,7 +83,14 @@ exports.handler = async (event) => {
     const phpEndpoint = 'https://booksglance.com/uploads.php';
     
     const formHeaders = formData.getHeaders();
-    console.log('Sending request to PHP endpoint with headers:', Object.keys(formHeaders));
+    
+    // Also send API key as header (PHP checks both header and POST)
+    formHeaders['X-API-Key'] = apiKey;
+    
+    console.log('Sending request to PHP endpoint');
+    console.log('API key in header:', !!formHeaders['X-API-Key']);
+    console.log('API key in form data:', true);
+    console.log('Form headers keys:', Object.keys(formHeaders));
     
     const response = await fetch(phpEndpoint, {
       method: 'POST',
@@ -102,18 +109,27 @@ exports.handler = async (event) => {
         status: response.status,
         error: errorMessage,
         apiKeySet: !!apiKey,
-        apiKeyLength: apiKey ? apiKey.length : 0
+        apiKeyLength: apiKey ? apiKey.length : 0,
+        debugInfo: errorData.debug || 'No debug info'
       });
+      
+      // Include debug info in response for troubleshooting
+      const responseBody = {
+        error: errorMessage,
+        details: response.status === 401 
+          ? 'API key mismatch. Please ensure UPLOAD_API_KEY in Netlify matches the value in uploads.php on Hostinger.'
+          : errorData.message || response.statusText
+      };
+      
+      // Add debug info if available (helps troubleshoot)
+      if (errorData.debug) {
+        responseBody.debug = errorData.debug;
+      }
       
       return {
         statusCode: response.status,
         headers,
-        body: JSON.stringify({ 
-          error: errorMessage,
-          details: response.status === 401 
-            ? 'API key mismatch. Please ensure UPLOAD_API_KEY in Netlify matches the value in uploads.php on Hostinger.'
-            : errorData.message || response.statusText
-        })
+        body: JSON.stringify(responseBody)
       };
     }
 
