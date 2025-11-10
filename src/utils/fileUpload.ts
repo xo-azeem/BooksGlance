@@ -14,25 +14,25 @@ export const uploadImageToHostinger = async (
     const fileExtension = file.name.split('.').pop() || 'jpg';
     const fileName = `${bookId}.${fileExtension}`;
 
-    // Get API key from environment variable (set in Netlify or .env file)
-    const apiKey = import.meta.env.VITE_UPLOAD_API_KEY;
-    
-    if (!apiKey) {
-      console.error('VITE_UPLOAD_API_KEY is not set. Current env keys:', 
-        Object.keys(import.meta.env).filter(key => key.startsWith('VITE_')));
-      throw new Error('Upload API key is not configured. Please add VITE_UPLOAD_API_KEY to your environment variables.');
-    }
+    // Convert file to base64 for server upload
+    const fileData = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
 
-    // Create FormData for PHP upload
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('fileName', fileName);
-    formData.append('apiKey', apiKey); // Send API key for authentication
-
-    // Upload to Hostinger PHP endpoint
-    const response = await fetch('https://booksglance.com/uploads.php', {
+    // Upload via Netlify function proxy (API key is added server-side, not exposed to client)
+    const response = await fetch('/.netlify/functions/upload-proxy', {
       method: 'POST',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        fileData,
+        fileName,
+        bookId
+      })
     });
 
     if (!response.ok) {

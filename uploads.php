@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // API key authentication - REQUIRED for security
 // Set your secret API key here (must match Netlify environment variable)
-$requiredApiKey = ""; // Must match VITE_UPLOAD_API_KEY in Netlify
+$requiredApiKey = "BOOKSGLANCE_UPLOAD_SECRET_2024"; // Must match UPLOAD_API_KEY in Netlify
 
 // Get API key from header or POST data
 $providedApiKey = $_SERVER['HTTP_X_API_KEY'] ?? $_POST['apiKey'] ?? '';

@@ -32,7 +32,7 @@ VITE_FIREBASE_APP_ID = 1:536756499018:web:51f73dd923f946e8e8ecb3
 This is required for secure file uploads to Hostinger.
 
 ```
-VITE_UPLOAD_API_KEY = your-secret-api-key-here
+UPLOAD_API_KEY = your-secret-api-key-here
 ```
 
 **Purpose:** Authenticate upload requests to the PHP endpoint on Hostinger.
@@ -41,8 +41,11 @@ VITE_UPLOAD_API_KEY = your-secret-api-key-here
 - Must match the API key in `uploads.php` on Hostinger
 - Use a strong, random string (32+ characters)
 - Example: `BOOKSGLANCE_UPLOAD_SECRET_2024_a7f3k9m2p5q8w1x4z6`
+- **Note:** Use `UPLOAD_API_KEY` (NOT `VITE_UPLOAD_API_KEY`) - this keeps it server-side only
 
-**Security:** Mark as "Secret" ✅ - This keeps it hidden in the Netlify UI.
+**Security:** 
+- Mark as "Secret" ✅ - This keeps it hidden in the Netlify UI
+- **Not exposed to client** - The API key is only used in Netlify Functions (server-side)
 
 ---
 
@@ -59,8 +62,8 @@ VITE_FIREBASE_STORAGE_BUCKET=booksglance-358d9.firebasestorage.app
 VITE_FIREBASE_MESSAGING_SENDER_ID=536756499018
 VITE_FIREBASE_APP_ID=1:536756499018:web:51f73dd923f946e8e8ecb3
 
-# Upload Security
-VITE_UPLOAD_API_KEY=your-secret-api-key-here
+# Upload Security (Server-side only - NOT exposed to client)
+UPLOAD_API_KEY=your-secret-api-key-here
 ```
 
 **Total: 7 environment variables**
@@ -70,10 +73,14 @@ VITE_UPLOAD_API_KEY=your-secret-api-key-here
 ## 🔒 Security Settings
 
 ### Mark as Secret ✅
-- **VITE_UPLOAD_API_KEY** - Must be marked as Secret (contains sensitive authentication key)
+- **UPLOAD_API_KEY** - Must be marked as Secret (contains sensitive authentication key)
+- **Note:** This variable does NOT have `VITE_` prefix, so it's server-side only and won't be flagged by Netlify's secret scanner
 
 ### Can be Public
 - **All VITE_FIREBASE_*** variables - These are public by design (Firebase uses security rules, not key secrecy)
+
+### Server-Side Only (Not Exposed to Client)
+- **UPLOAD_API_KEY** - Used only in Netlify Functions, never bundled into client code
 
 ---
 
@@ -139,7 +146,9 @@ After adding all variables, verify:
 
 | Variable | Purpose | Example Value |
 |----------|---------|---------------|
-| `VITE_UPLOAD_API_KEY` | API key for upload authentication | `BOOKSGLANCE_UPLOAD_SECRET_2024_...` |
+| `UPLOAD_API_KEY` | API key for upload authentication (server-side only) | `BOOKSGLANCE_UPLOAD_SECRET_2024_...` |
+
+**Important:** This variable does NOT have `VITE_` prefix, so it's only available in Netlify Functions (server-side), not in the client bundle.
 
 ---
 
@@ -160,8 +169,9 @@ You do **NOT** need these (they were for the old FTP method):
 ## 🆘 Troubleshooting
 
 ### "Upload API key is not configured"
-- **Solution**: Add `VITE_UPLOAD_API_KEY` to Netlify
+- **Solution**: Add `UPLOAD_API_KEY` (without VITE_ prefix) to Netlify
 - **Solution**: Redeploy after adding
+- **Note**: The client code now uses a Netlify function proxy, so the API key is server-side only
 
 ### "Firebase configuration is missing"
 - **Solution**: Add all 6 Firebase variables
@@ -172,8 +182,9 @@ You do **NOT** need these (they were for the old FTP method):
 - **Solution**: Clear cache and redeploy
 
 ### API key mismatch error
-- **Solution**: Ensure `VITE_UPLOAD_API_KEY` in Netlify matches `$requiredApiKey` in `uploads.php`
+- **Solution**: Ensure `UPLOAD_API_KEY` in Netlify matches `$requiredApiKey` in `uploads.php`
 - **Solution**: Check for extra spaces or quotes
+- **Solution**: Make sure you're using `UPLOAD_API_KEY` (not `VITE_UPLOAD_API_KEY`)
 
 ---
 
@@ -181,7 +192,7 @@ You do **NOT** need these (they were for the old FTP method):
 
 **Total Variables Needed:** 7
 
-**Secret Variables:** 1 (`VITE_UPLOAD_API_KEY`)
+**Secret Variables:** 1 (`UPLOAD_API_KEY`)
 
 **Public Variables:** 6 (all Firebase variables)
 
