@@ -68,20 +68,64 @@ exports.handler = async (event) => {
     // Prepare JSON payload (fileData is already a data URL string)
     const jsonBody = JSON.stringify({ fileData, fileName, bookId });
 
-    console.log('Sending request to PHP endpoint as JSON');
+    console.log('Preparing to send request to PHP endpoint as JSON');
     console.log('API key in header:', !!apiKey);
     console.log('File name:', fileName);
     console.log('Approx payload size (bytes):', Buffer.byteLength(jsonBody, 'utf8'));
 
-    const response = await fetch(phpEndpoint, {
-      method: 'POST',
-      body: jsonBody,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': apiKey
+    // If running locally and you prefer not to call the remote PHP endpoint, set
+    // UPLOAD_PROXY_MOCK=true in your environment to return a fake URL for testing.
+    const useMock = process.env.UPLOAD_PROXY_MOCK === 'true';
+    if (useMock) {
+      console.log('UPLOAD_PROXY_MOCK is enabled — returning mock upload response');
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          url: `https://placehold.co/600x800?name=${encodeURIComponent(fileName)}`,
+          fileName
+        })
+      };
+    }
+
+    // Use AbortController to allow configurable timeout for the fetch request.
+    const timeoutMs = parseInt(process.env.UPLOAD_PROXY_TIMEOUT_MS || '30000', 10); // default 30s
+    const controller = new AbortController();
+    const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
+
+    let response;
+    try {
+      response = await fetch(phpEndpoint, {
+        method: 'POST',
+        body: jsonBody,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey
+        },
+        signal: controller.signal
+      });
+    } catch (fetchErr) {
+      // Clear timeout
+      clearTimeout(timeoutHandle);
+      console.error('Fetch to PHP endpoint failed:', fetchErr);
+      // If aborted due to timeout, provide a clearer error message
+      if (fetchErr && fetchErr.name === 'AbortError') {
+        return {
+          statusCode: 504,
+          headers,
+          body: JSON.stringify({ error: 'Connect Timeout Error', message: `Could not reach ${phpEndpoint} within ${timeoutMs}ms` })
+        };
       }
-    });
-    
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Failed to contact PHP endpoint', message: fetchErr.message || String(fetchErr) })
+      };
+    } finally {
+      clearTimeout(timeoutHandle);
+    }
+
     console.log('PHP endpoint response status:', response.status);
 
     if (!response.ok) {
