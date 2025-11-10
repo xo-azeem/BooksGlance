@@ -10,6 +10,7 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import AuthorsPage from './pages/AuthorsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import AdminPortal from './pages/AdminPortal';
 export function App() {
   return <ThemeProvider>
       <Router>
@@ -25,6 +26,7 @@ export function App() {
             <Route path="/cart" element={<CartPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/admin" element={<AdminPortal />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Layout>
