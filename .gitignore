@@ -17,6 +17,9 @@ dist-ssr
 .env.local
 .env.production
 
+# PHP files with sensitive API keys (keep local only)
+uploads.php
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
