@@ -24,10 +24,23 @@ $requiredApiKey = "BOOKSGLANCE_UPLOAD_SECRET_2024"; // Must match UPLOAD_API_KEY
 // Get API key from header or POST data
 $providedApiKey = $_SERVER['HTTP_X_API_KEY'] ?? $_POST['apiKey'] ?? '';
 
+// Debug logging (remove in production if needed)
+$debugInfo = [
+    'hasHeaderKey' => isset($_SERVER['HTTP_X_API_KEY']),
+    'hasPostKey' => isset($_POST['apiKey']),
+    'providedKeyLength' => strlen($providedApiKey),
+    'requiredKeyLength' => strlen($requiredApiKey),
+    'keysMatch' => $providedApiKey === $requiredApiKey
+];
+
 // Validate API key
 if (empty($providedApiKey) || $providedApiKey !== $requiredApiKey) {
     http_response_code(401);
-    echo json_encode(["error" => "Unauthorized: Invalid or missing API key"]);
+    echo json_encode([
+        "error" => "Unauthorized: Invalid or missing API key",
+        "debug" => $debugInfo,
+        "hint" => "Ensure UPLOAD_API_KEY in Netlify matches the value in uploads.php"
+    ]);
     exit;
 }
 

@@ -1,4 +1,7 @@
 /* eslint-env node */
+/* eslint-disable */
+const FormData = require('form-data');
+
 exports.handler = async (event) => {
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
@@ -30,13 +33,18 @@ exports.handler = async (event) => {
     // Note: Use UPLOAD_API_KEY (without VITE_ prefix) so it's not bundled into client
     const apiKey = process.env.UPLOAD_API_KEY;
     
+    // Debug: Log available env vars (without exposing the key itself)
+    console.log('UPLOAD_API_KEY exists:', !!apiKey);
+    console.log('UPLOAD_API_KEY length:', apiKey ? apiKey.length : 0);
+    
     if (!apiKey) {
+      console.error('UPLOAD_API_KEY is not set in Netlify environment variables');
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({ 
           error: 'Server configuration error - Upload API key not set',
-          details: 'Please add UPLOAD_API_KEY (without VITE_ prefix) to Netlify environment variables'
+          details: 'Please add UPLOAD_API_KEY (without VITE_ prefix) to Netlify environment variables. Make sure to redeploy after adding the variable.'
         })
       };
     }
@@ -57,7 +65,6 @@ exports.handler = async (event) => {
     const fileBuffer = Buffer.from(base64String, 'base64');
 
     // Create form data for PHP endpoint
-    const FormData = require('form-data');
     const formData = new FormData();
     
     // Append file as a Buffer with proper filename
@@ -68,23 +75,44 @@ exports.handler = async (event) => {
     formData.append('fileName', fileName);
     formData.append('apiKey', apiKey); // Add API key server-side
 
+    // Debug: Verify API key is being added
+    console.log('Sending API key (first 10 chars):', apiKey.substring(0, 10) + '...');
+    console.log('API key length:', apiKey.length);
+
     // Forward to PHP endpoint
     const phpEndpoint = 'https://booksglance.com/uploads.php';
+    
+    const formHeaders = formData.getHeaders();
+    console.log('Sending request to PHP endpoint with headers:', Object.keys(formHeaders));
     
     const response = await fetch(phpEndpoint, {
       method: 'POST',
       body: formData,
-      headers: formData.getHeaders()
+      headers: formHeaders
     });
+    
+    console.log('PHP endpoint response status:', response.status);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.error || errorData.message || response.statusText;
+      
+      // Log detailed error for debugging
+      console.error('PHP endpoint error:', {
+        status: response.status,
+        error: errorMessage,
+        apiKeySet: !!apiKey,
+        apiKeyLength: apiKey ? apiKey.length : 0
+      });
+      
       return {
         statusCode: response.status,
         headers,
         body: JSON.stringify({ 
-          error: errorData.error || 'Upload failed',
-          message: errorData.message || response.statusText
+          error: errorMessage,
+          details: response.status === 401 
+            ? 'API key mismatch. Please ensure UPLOAD_API_KEY in Netlify matches the value in uploads.php on Hostinger.'
+            : errorData.message || response.statusText
         })
       };
     }
@@ -108,4 +136,5 @@ exports.handler = async (event) => {
     };
   }
 };
+
 
