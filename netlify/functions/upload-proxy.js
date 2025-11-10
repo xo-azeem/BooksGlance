@@ -64,24 +64,44 @@ exports.handler = async (event) => {
     const base64String = fileData.includes(',') ? fileData.split(',')[1] : fileData;
     const fileBuffer = Buffer.from(base64String, 'base64');
 
+    // Determine content type from file extension
+    const getContentType = (filename) => {
+      const ext = filename.split('.').pop()?.toLowerCase();
+      const types = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp'
+      };
+      return types[ext] || 'image/jpeg';
+    };
+
+    const contentType = getContentType(fileName);
+
     // Create form data for PHP endpoint
     const formData = new FormData();
     
-    // Append file as a Buffer with proper filename
+    // Append file as a Buffer - form-data package handles Buffer correctly
+    // The field name must be 'file' to match PHP's $_FILES['file']
     formData.append('file', fileBuffer, {
       filename: fileName,
-      contentType: 'image/jpeg' // Adjust based on file type if needed
+      contentType: contentType
     });
     formData.append('fileName', fileName);
     formData.append('apiKey', apiKey); // Add API key server-side
 
-    // Debug: Verify API key is being added
+    // Debug: Verify API key and file are being added
     console.log('Sending API key (first 10 chars):', apiKey.substring(0, 10) + '...');
     console.log('API key length:', apiKey.length);
+    console.log('File buffer size:', fileBuffer.length, 'bytes');
+    console.log('File name:', fileName);
+    console.log('Content type:', contentType);
 
     // Forward to PHP endpoint
     const phpEndpoint = 'https://booksglance.com/uploads.php';
     
+    // Get form headers (includes Content-Type with boundary)
     const formHeaders = formData.getHeaders();
     
     // Also send API key as header (PHP checks both header and POST)
@@ -89,9 +109,10 @@ exports.handler = async (event) => {
     
     console.log('Sending request to PHP endpoint');
     console.log('API key in header:', !!formHeaders['X-API-Key']);
-    console.log('API key in form data:', true);
-    console.log('Form headers keys:', Object.keys(formHeaders));
+    console.log('Content-Type:', formHeaders['content-type']);
+    console.log('Form data fields:', ['file', 'fileName', 'apiKey']);
     
+    // Send the request - form-data works with fetch in Node.js 18+
     const response = await fetch(phpEndpoint, {
       method: 'POST',
       body: formData,
