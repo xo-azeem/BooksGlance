@@ -23,7 +23,10 @@ export const uploadImageToHostinger = async (
     });
 
     // Upload via Netlify function proxy (API key is added server-side, not exposed to client)
-    const response = await fetch('/.netlify/functions/upload-proxy', {
+    // The proxy URL can be overridden in development by setting VITE_UPLOAD_PROXY_URL in .env
+  const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env;
+  const proxyUrl = env?.VITE_UPLOAD_PROXY_URL || '/.netlify/functions/upload-proxy';
+  const response = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -42,9 +45,21 @@ export const uploadImageToHostinger = async (
         errorMessage = errorData.error || errorData.message || errorMessage;
         console.error('Upload error details:', errorData);
       } catch (e) {
-        // If response is not JSON, use status text
-        errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
+        // If response body isn't JSON (e.g., 404 HTML), include the text snippet for debugging
+        try {
+          const text = await response.text();
+          const snippet = text ? text.substring(0, 300) : '';
+          errorMessage = `Upload failed: ${response.status} ${response.statusText}` + (snippet ? ` - ${snippet}` : '');
+        } catch (t) {
+          errorMessage = `Upload failed: ${response.status} ${response.statusText}`;
+        }
       }
+
+      // Helpful hint when proxy endpoint is missing (common in local dev)
+      if (response.status === 404) {
+        errorMessage += ' - Proxy endpoint not found. If running locally, start Netlify functions (e.g., `netlify dev`) or set VITE_UPLOAD_PROXY_URL to the correct function URL.';
+      }
+
       throw new Error(errorMessage);
     }
 

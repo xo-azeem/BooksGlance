@@ -60,63 +60,26 @@ exports.handler = async (event) => {
       };
     }
 
-    // Convert base64 data URL to Buffer
-    const base64String = fileData.includes(',') ? fileData.split(',')[1] : fileData;
-    const fileBuffer = Buffer.from(base64String, 'base64');
-
-    // Determine content type from file extension
-    const getContentType = (filename) => {
-      const ext = filename.split('.').pop()?.toLowerCase();
-      const types = {
-        'jpg': 'image/jpeg',
-        'jpeg': 'image/jpeg',
-        'png': 'image/png',
-        'gif': 'image/gif',
-        'webp': 'image/webp'
-      };
-      return types[ext] || 'image/jpeg';
-    };
-
-    const contentType = getContentType(fileName);
-
-    // Create form data for PHP endpoint
-    const formData = new FormData();
-    
-    // Append file as a Buffer - form-data package handles Buffer correctly
-    // The field name must be 'file' to match PHP's $_FILES['file']
-    formData.append('file', fileBuffer, {
-      filename: fileName,
-      contentType: contentType
-    });
-    formData.append('fileName', fileName);
-    formData.append('apiKey', apiKey); // Add API key server-side
-
-    // Debug: Verify API key and file are being added
-    console.log('Sending API key (first 10 chars):', apiKey.substring(0, 10) + '...');
-    console.log('API key length:', apiKey.length);
-    console.log('File buffer size:', fileBuffer.length, 'bytes');
-    console.log('File name:', fileName);
-    console.log('Content type:', contentType);
-
-    // Forward to PHP endpoint
+    // Instead of sending multipart/form-data (which can be dropped/modified by some hosts),
+    // send a JSON body containing the base64 file data. The PHP endpoint will accept both
+    // multipart uploads and JSON base64 payloads (backwards compatible).
     const phpEndpoint = 'https://booksglance.com/uploads.php';
-    
-    // Get form headers (includes Content-Type with boundary)
-    const formHeaders = formData.getHeaders();
-    
-    // Also send API key as header (PHP checks both header and POST)
-    formHeaders['X-API-Key'] = apiKey;
-    
-    console.log('Sending request to PHP endpoint');
-    console.log('API key in header:', !!formHeaders['X-API-Key']);
-    console.log('Content-Type:', formHeaders['content-type']);
-    console.log('Form data fields:', ['file', 'fileName', 'apiKey']);
-    
-    // Send the request - form-data works with fetch in Node.js 18+
+
+    // Prepare JSON payload (fileData is already a data URL string)
+    const jsonBody = JSON.stringify({ fileData, fileName, bookId });
+
+    console.log('Sending request to PHP endpoint as JSON');
+    console.log('API key in header:', !!apiKey);
+    console.log('File name:', fileName);
+    console.log('Approx payload size (bytes):', Buffer.byteLength(jsonBody, 'utf8'));
+
     const response = await fetch(phpEndpoint, {
       method: 'POST',
-      body: formData,
-      headers: formHeaders
+      body: jsonBody,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': apiKey
+      }
     });
     
     console.log('PHP endpoint response status:', response.status);

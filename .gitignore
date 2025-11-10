@@ -30,3 +30,6 @@ uploads.php
 *.njsproj
 *.sln
 *.sw?
+
+# Local Netlify folder
+.netlify
