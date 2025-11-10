@@ -1,5 +1,6 @@
 /**
- * Upload image to Cloudinary
+ * Upload image to Cloudinary via server-side Netlify Function
+ * This keeps Cloudinary credentials private and not exposed to client
  * @param file - The image file to upload
  * @param bookId - The book ID to use as the public_id in Cloudinary
  * @returns Promise<string> - The uploaded image URL
@@ -8,68 +9,37 @@ export const uploadImageToCloudinary = async (
   file: File,
   bookId: string
 ): Promise<string> => {
-  // Validate environment variables
-  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-
-  // Debug logging
-  console.log('Cloudinary Config Check:', {
-    cloudName: cloudName || 'NOT SET',
-    uploadPreset: uploadPreset || 'NOT SET',
-    allEnvKeys: Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'))
-  });
-
-  if (!cloudName || cloudName === 'your_cloud_name_here' || cloudName.trim() === '') {
-    throw new Error('Cloudinary Cloud Name is not configured. Please check your .env file and restart your dev server.');
-  }
-
-  if (!uploadPreset || uploadPreset === 'your_upload_preset_name_here' || uploadPreset.trim() === '') {
-    throw new Error('Cloudinary Upload Preset is not configured. Please check your .env file and restart your dev server.');
-  }
-
-  // Sanitize bookId for Cloudinary public_id (only alphanumeric, underscores, and hyphens)
-  const sanitizedBookId = bookId.replace(/[^a-zA-Z0-9_-]/g, '_');
-
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', uploadPreset);
-  // Set folder and public_id together - public_id should include folder path
-  formData.append('public_id', `BooksGlance/${sanitizedBookId}`);
-  // Note: 'overwrite' is not allowed with unsigned uploads
-
   try {
-    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-    console.log('Uploading to Cloudinary:', {
-      cloudName,
-      uploadPreset,
-      publicId: `BooksGlance/${sanitizedBookId}`,
-      fileName: file.name,
-      fileSize: file.size
+    // Convert file to base64 for server upload
+    const fileData = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
     });
 
-    const response = await fetch(uploadUrl, {
+    // Call our server-side Netlify function (credentials are private)
+    const response = await fetch('/.netlify/functions/upload-image', {
       method: 'POST',
-      body: formData
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        fileData,
+        bookId,
+        fileName: file.name
+      })
     });
 
     if (!response.ok) {
-      // Try to get error details from Cloudinary
-      let errorMessage = 'Failed to upload image to Cloudinary';
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.error?.message || errorData.message || errorMessage;
-        console.error('Cloudinary error details:', errorData);
-      } catch (e) {
-        // If response is not JSON, use status text
-        errorMessage = `Cloudinary upload failed: ${response.status} ${response.statusText}`;
-      }
-      throw new Error(errorMessage);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || errorData.message || 'Failed to upload image');
     }
 
-    const data = await response.json();
-    return data.secure_url;
+    const result = await response.json();
+    return result.url;
   } catch (error) {
-    console.error('Error uploading image to Cloudinary:', error);
+    console.error('Error uploading image:', error);
     if (error instanceof Error) {
       throw error;
     }
@@ -79,6 +49,8 @@ export const uploadImageToCloudinary = async (
 
 /**
  * Generate Cloudinary URL with transformations
+ * Note: This only generates URLs for already-uploaded images
+ * The cloud name is public since it's in the image URL anyway
  * @param publicId - The public_id of the image
  * @param transformations - Optional Cloudinary transformations
  * @returns The transformed image URL
@@ -87,9 +59,12 @@ export const getCloudinaryImageUrl = (
   publicId: string,
   transformations?: string
 ): string => {
-  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-  const baseUrl = `https://res.cloudinary.com/${cloudName}/image/upload`;
+  // Cloud name can be public - it's visible in image URLs anyway
+  // But we'll get it from a server endpoint if needed, or use a public constant
+  // For now, we'll construct URLs from the public_id which already includes the path
+  const baseUrl = 'https://res.cloudinary.com';
   const transformString = transformations ? `${transformations}/` : '';
-  return `${baseUrl}/${transformString}BooksGlance/${publicId}`;
+  // publicId should already include BooksGlance/ prefix from upload
+  return `${baseUrl}/image/upload/${transformString}${publicId}`;
 };
 
